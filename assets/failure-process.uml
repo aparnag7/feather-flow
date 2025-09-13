@@ -1,0 +1,36 @@
+@startuml
+title Cross-Service Job Orchestration (A → B → C)
+
+actor User
+participant "FeatherFlow Orchestrator" as Orchestrator
+participant "Service A" as A
+participant "Service B" as B
+participant "Service C" as C
+participant "Database (Logs)" as DB
+
+User -> Orchestrator: Trigger Workflow (A → B → C)
+
+== Job A ==
+Orchestrator -> A: Execute Job A
+A --> Orchestrator: Success
+Orchestrator -> DB: Log success (Job A)
+Orchestrator -> B: Trigger Job B
+
+== Job B (Failure) ==
+B --> Orchestrator: Failure
+Orchestrator -> DB: Log failure (Job B)
+Orchestrator -> B: Retry with Backoff (configurable)
+
+alt Service B recovers
+  B --> Orchestrator: Success (on retry)
+  Orchestrator -> DB: Log success (Job B)
+  Orchestrator -> C: Trigger Job C
+  C --> Orchestrator: Success
+  Orchestrator -> DB: Log success (Job C)
+else Service B stays down
+  Orchestrator -> DB: Mark Job B as FAILED
+  Orchestrator -> DB: Mark Job C as BLOCKED
+  Orchestrator -> User: Notify workflow incomplete
+end
+
+@enduml

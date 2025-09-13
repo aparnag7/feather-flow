@@ -1,0 +1,39 @@
+@startuml
+title Feather-Flow
+
+actor User as U
+
+rectangle "Spring Boot Layer" {
+  component "REST Controllers" as REST
+  component "Workflow Registry API" as Registry
+  component "Job Config Loader\n(JSON/YAML via Jackson/SnakeYAML)" as ConfigLoader
+  component "Persistence (JPA)" as JPA
+  component "Metrics (Actuator)" as Metrics
+}
+
+rectangle "Core Orchestration Engine\n(Pure Core Java)" {
+  component "DAG Parser\n(Topological Sort)" as DAG
+  component "Job Scheduler\n(ScheduledExecutorService)" as Scheduler
+  component "Async Execution\n(CompletableFuture/ThreadPool)" as Async
+  component "Retry Logic & Backoff" as Retry
+  component "Dependency Manager" as Dep
+  component "Execution Logs" as Logs
+}
+
+database "Database (Postgres/MySQL)" as DB
+
+U --> REST : REST API / CLI
+REST --> Registry
+REST --> ConfigLoader
+Registry --> DAG
+ConfigLoader --> DAG
+DAG --> Scheduler
+Scheduler --> Async
+Async --> Retry
+Async --> Logs
+Retry --> Logs
+Logs --> JPA
+JPA --> DB
+Metrics --> REST
+
+@enduml
