@@ -1,3 +1,11 @@
 databaseChangeLog:
   - include:
       file: db/changelog/001-create-workflows.yaml
+  - include:
+      file: db/changelog/002-create-job-status-enum.yaml
+  - include:
+      file: db/changelog/003-create-jobs.yaml
+  - include:
+      file: db/changelog/004-create-job-dependencies.yaml
+  - include:
+     file: db/changelog/005-create-workflow-runs.yaml

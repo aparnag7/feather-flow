@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004
+      author: aparna
+      changes:
+        - createTable:
+            tableName: job_dependencies
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: job_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: depends_on_job_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: job_dependencies
+            baseColumnNames: job_id
+            constraintName: fk_job_dep_job
+            referencedTableName: jobs
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: job_dependencies
+            baseColumnNames: depends_on_job_id
+            constraintName: fk_job_dep_depends
+            referencedTableName: jobs
+            referencedColumnNames: id

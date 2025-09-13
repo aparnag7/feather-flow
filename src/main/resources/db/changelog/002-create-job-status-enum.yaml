@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002
+      author: aparna
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TYPE job_status AS ENUM ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED', 'CANCELLED');

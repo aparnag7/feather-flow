@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005
+      author: aparna
+      changes:
+        - createTable:
+            tableName: workflow_runs
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workflow_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+              - column:
+                  name: started_at
+                  type: TIMESTAMP
+              - column:
+                  name: ended_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: workflow_runs
+            baseColumnNames: workflow_id
+            constraintName: fk_workflowrun_workflow
+            referencedTableName: workflows
+            referencedColumnNames: id
