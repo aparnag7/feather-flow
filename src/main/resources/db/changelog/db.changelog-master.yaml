@@ -14,4 +14,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/007-create-execution-logs.yaml
   - include:
-     file: db/changelog/008-refactor-jobs-table.yaml
+      file: db/changelog/008-refactor-jobs-table.yaml
+  - include:
+      file: db/changelog/009-change-job-status-to-string.yaml

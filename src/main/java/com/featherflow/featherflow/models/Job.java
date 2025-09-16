@@ -3,6 +3,8 @@ package com.featherflow.featherflow.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,8 +15,8 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Job {
-
     @Id
+    @GeneratedValue
     @Column(nullable = false)
     private UUID id;
 
@@ -31,9 +33,9 @@ public class Job {
     @Column
     private String endpoint;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private JobStatus status;
+
+    @Column(length = 20)
+    private String status;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
     private List<JobDependency> dependencies;
@@ -47,6 +49,9 @@ public class Job {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = String.valueOf(JobStatus.PENDING);
+        }
     }
 
     @PreUpdate

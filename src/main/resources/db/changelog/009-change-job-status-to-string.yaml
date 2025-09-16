@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009
+      author: aparna
+      changes:
+        # Step 1: Alter column type to VARCHAR
+        - modifyDataType:
+            tableName: jobs
+            columnName: status
+            newDataType: varchar(20)
+
+        # Step 2: Optionally, set default value
+        - addDefaultValue:
+            tableName: jobs
+            columnName: status
+            defaultValue: 'PENDING'
