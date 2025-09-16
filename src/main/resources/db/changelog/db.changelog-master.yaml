@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/006-create-job-runs.yaml
   - include:
       file: db/changelog/007-create-execution-logs.yaml
+  - include:
+     file: db/changelog/008-refactor-jobs-table.yaml

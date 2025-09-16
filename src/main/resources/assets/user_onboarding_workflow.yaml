@@ -1,0 +1,31 @@
+name: "user_onboarding_workflow"
+jobs:
+  - name: "createUser"
+    endpoint: "/api/users/create"
+    serviceName: "UserService"
+    dependsOn: []
+
+  - name: "verifyEmail"
+    endpoint: "/api/users/verify-email"
+    serviceName: "UserService"
+    dependsOn: ["createUser"]
+
+  - name: "setupPaymentProfile"
+    endpoint: "/api/payments/setup-profile"
+    serviceName: "PaymentService"
+    dependsOn: ["createUser"]
+
+  - name: "chargeInitialFee"
+    endpoint: "/api/payments/charge"
+    serviceName: "PaymentService"
+    dependsOn: ["setupPaymentProfile"]
+
+  - name: "sendWelcomeEmail"
+    endpoint: "/api/notifications/send-welcome"
+    serviceName: "NotificationService"
+    dependsOn: ["verifyEmail", "chargeInitialFee"]
+
+  - name: "sendSmsNotification"
+    endpoint: "/api/notifications/send-sms"
+    serviceName: "NotificationService"
+    dependsOn: ["chargeInitialFee"]

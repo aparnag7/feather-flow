@@ -25,10 +25,11 @@ public class Job {
     @Column(nullable = false)
     private String name;
 
-    private String type;
+    @Column
+    private String serviceName;
 
-    @Column(columnDefinition = "jsonb")
-    private String config; // store JSON as string
+    @Column
+    private String endpoint;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008
+      author: aparna
+      changes:
+        - addColumn:
+            tableName: jobs
+            columns:
+              - column:
+                  name: service_name
+                  type: varchar(255)
+              - column:
+                  name: endpoint
+                  type: varchar(255)
+        - dropColumn:
+            columnName: config
+            tableName: jobs

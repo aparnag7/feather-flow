@@ -1,0 +1,10 @@
+workflow:
+  name: "parallel_example"
+  jobs:
+    - name: fetch_customer_data
+      command: "echo 'Fetching customer data'"
+    - name: fetch_order_data
+      command: "echo 'Fetching order data'"
+    - name: aggregate
+      command: "echo 'Aggregating results'"
+      depends_on: ["fetch_customer_data", "fetch_order_data"]
