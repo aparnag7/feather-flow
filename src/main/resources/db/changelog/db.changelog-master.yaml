@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/004-create-job-dependencies.yaml
   - include:
      file: db/changelog/005-create-workflow-runs.yaml
+  - include:
+      file: db/changelog/006-create-job-runs.yaml
+  - include:
+      file: db/changelog/007-create-execution-logs.yaml
