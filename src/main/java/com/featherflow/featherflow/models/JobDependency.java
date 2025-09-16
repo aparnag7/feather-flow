@@ -13,6 +13,7 @@ import java.util.UUID;
 @Setter
 public class JobDependency {
     @Id
+    @GeneratedValue
     @Column(nullable = false)
     private UUID id;
 

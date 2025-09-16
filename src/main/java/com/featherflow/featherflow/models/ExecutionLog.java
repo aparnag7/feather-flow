@@ -14,6 +14,7 @@ import java.util.UUID;
 @Setter
 public class ExecutionLog {
     @Id
+    @GeneratedValue
     @Column(nullable = false)
     private UUID id;
 

@@ -14,6 +14,7 @@ import java.util.UUID;
 public class JobRun {
 
     @Id
+    @GeneratedValue
     @Column(nullable = false)
     private UUID id;
 

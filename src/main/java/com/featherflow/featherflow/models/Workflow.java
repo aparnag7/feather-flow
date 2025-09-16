@@ -14,6 +14,7 @@ import java.util.UUID;
 @Setter
 public class Workflow {
     @Id
+    @GeneratedValue
     @Column(nullable = false)
     private UUID id;
 
