@@ -4,21 +4,24 @@ import com.featherflow.featherflow.models.Workflow;
 import com.featherflow.featherflow.models.WorkflowDefinition;
 import com.featherflow.featherflow.parser.DAGValidator;
 import com.featherflow.featherflow.parser.YamlParser;
+import com.featherflow.featherflow.service.orchestrator.WorkflowRunner;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
 
 @Component
 public class WorkflowOrchestrator {
     private final WorkflowService workflowService;
+    private final WorkflowRunner workflowRunner;
 
-    public WorkflowOrchestrator(WorkflowService workflowService) {
+    public WorkflowOrchestrator(WorkflowService workflowService, WorkflowRunner workflowRunner) {
         this.workflowService = workflowService;
+        this.workflowRunner = workflowRunner;
     }
 
     @Transactional
-    public Workflow runWorkflowFromYaml(String yamlFilePath) {
+    public void runWorkflowFromYaml(String yamlFilePath) {
         // 1. Parse YAML
-        WorkflowDefinition workflowDefinition = new YamlParser().parseWorkflow("assets/user_onboarding_workflow.yaml");
+        WorkflowDefinition workflowDefinition = new YamlParser().parseWorkflow(yamlFilePath);
 
         // 2. Validate DAG
         DAGValidator.validate(workflowDefinition);
@@ -27,6 +30,8 @@ public class WorkflowOrchestrator {
         Workflow workflow = workflowService.saveWorkflow(workflowDefinition);
 
         System.out.println("Workflow persisted successfully: " + workflow.getId());
-        return workflow;
+
+        // 4. Execute workflows
+        workflowRunner.runWorkflow(workflow.getId());
     }
 }

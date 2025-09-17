@@ -8,8 +8,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class WorkflowService {
@@ -23,6 +21,8 @@ public class WorkflowService {
         this.jobRepository = jobRepository;
         this.jobDependencyRepository = jobDependencyRepository;
     }
+
+    // read about Transactional here: https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#transaction-declarative-annotations
 
     @Transactional
     public Workflow saveWorkflow(WorkflowDefinition workflowDefinition) {

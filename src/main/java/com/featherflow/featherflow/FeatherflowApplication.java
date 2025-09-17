@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
+// read about CommandLineRunner
 public class FeatherflowApplication implements CommandLineRunner {
 
     private final WorkflowOrchestrator orchestrator;
@@ -18,7 +19,7 @@ public class FeatherflowApplication implements CommandLineRunner {
 		SpringApplication.run(FeatherflowApplication.class, args);
 	}
 
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         String yamlPath = "assets/complex_workflow.yaml";
         orchestrator.runWorkflowFromYaml(yamlPath);
     }
