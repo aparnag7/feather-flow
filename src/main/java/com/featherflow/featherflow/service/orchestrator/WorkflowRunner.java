@@ -31,8 +31,12 @@ public class WorkflowRunner {
         // get all jobs and dependencies for the workflow
         List<Job> jobs = jobRepository.findByWorkflowId(workflowId);
         HashMap<UUID, Job> jobMap = new HashMap<>();
-        HashMap<UUID, List<UUID>> adjacencyList = new HashMap<>();
+        HashMap<UUID, List<UUID>> adjacencyList = new HashMap<>(); // each job knows which jobs depend on it.
         ConcurrentHashMap<UUID, Integer> inDegree = new ConcurrentHashMap<>();
+        // count how many dependencies each job has
+        // multiple threads will update inDegree, so use ConcurrentHashMap
+
+        // Build DAG
         for (Job job : jobs) {
             jobMap.put(job.getId(), job);
             List<JobDependency> dependencyList = dependencyRepository.findByJob(job);
@@ -44,8 +48,11 @@ public class WorkflowRunner {
         }
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
-        BlockingQueue<UUID> readyQueue = new LinkedBlockingQueue<>();
         AtomicInteger jobsRemaining = new AtomicInteger(jobMap.size());
+        BlockingQueue<UUID> readyQueue = new LinkedBlockingQueue<>();
+        // thread-safe queue for jobs ready to run
+        // if thread tries to take() an element but the queue is empty,
+        // the thread waits (blocks) until an element is available.
 
         // add all jobs with no dependencies to the ready queue
         for (UUID jobId : inDegree.keySet()) {
@@ -61,7 +68,7 @@ public class WorkflowRunner {
             if (jobId == null) continue;
 
             executor.submit(() -> {
-                Job job = jobMap.get(jobId); // use cached job for logic
+                Job job = jobMap.get(jobId);
                 try {
                     jobService.updateStatus(jobId, JobStatus.RUNNING);
                     System.out.println("Job " + job.getName() + " is RUNNING...");
