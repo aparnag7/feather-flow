@@ -19,8 +19,8 @@ public class FeatherflowApplication implements CommandLineRunner {
 		SpringApplication.run(FeatherflowApplication.class, args);
 	}
 
-    public void run(String... args) {
-        String yamlPath = "assets/complex_workflow.yaml";
+    public void run(String... args) throws InterruptedException {
+        String yamlPath = "assets/user_onboarding_workflow.yaml";
         orchestrator.runWorkflowFromYaml(yamlPath);
     }
 }

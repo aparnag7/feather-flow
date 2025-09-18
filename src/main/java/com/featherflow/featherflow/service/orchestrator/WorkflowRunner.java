@@ -2,27 +2,36 @@ package com.featherflow.featherflow.service.orchestrator;
 
 import com.featherflow.featherflow.models.Job;
 import com.featherflow.featherflow.models.JobDependency;
+import com.featherflow.featherflow.models.JobStatus;
 import com.featherflow.featherflow.repository.JobDependencyRepository;
 import com.featherflow.featherflow.repository.JobRepository;
+import com.featherflow.featherflow.service.JobService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class WorkflowRunner {
 
     private final JobRepository jobRepository;
-    private final JobRunner jobRunner;
     private final JobDependencyRepository dependencyRepository;
+    private final JobRunner jobRunner;
+    private final JobService jobService;
 
-    public WorkflowRunner(JobRepository jobRepository, JobDependencyRepository dependencyRepository, JobRunner jobRunner) {
+    public WorkflowRunner(JobRepository jobRepository, JobDependencyRepository dependencyRepository, JobRunner jobRunner, JobService jobService) {
         this.jobRepository = jobRepository;
         this.dependencyRepository = dependencyRepository;
         this.jobRunner = jobRunner;
+        this.jobService = jobService;
     }
 
-    public void runWorkflow(UUID workflowId) {
-        // get list of jobs for this workflow
+    @Transactional(propagation = Propagation.NEVER)
+    public void runWorkflow(UUID workflowId) throws InterruptedException {
+        // get all jobs and dependencies for the workflow
         List<Job> jobs = jobRepository.findByWorkflowId(workflowId);
         HashMap<UUID, Job> jobMap = new HashMap<>();
         HashMap<UUID, List<UUID>> adjacencyList = new HashMap<>();
@@ -36,32 +45,51 @@ public class WorkflowRunner {
                 adjacencyList.computeIfAbsent(dependsOnJobId, k -> new java.util.ArrayList<>()).add(job.getId());
             }
         }
-        /*
-        1. Start with all jobs where indegree == 0 → ready to run.
-        2. Execute them (via JobExecutor).
-        3. After completion, decrement indegree of dependent jobs.
-        4. If indegree reaches 0 → push to queue.
-        5. Repeat until no jobs lef
-         */
 
-        Queue<UUID> readyQueue = new LinkedList<>();
-        for(UUID jobId : inDegree.keySet()) {
-            if(inDegree.get(jobId) == 0) {
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        BlockingQueue<UUID> readyQueue = new LinkedBlockingQueue<>();
+        AtomicInteger jobsRemaining = new AtomicInteger(jobMap.size());
+
+        // add all jobs with no dependencies to the ready queue
+        for (UUID jobId : inDegree.keySet()) {
+            if (inDegree.get(jobId) == 0) {
                 readyQueue.add(jobId);
             }
         }
+        System.out.println("Initial ready queue: " + readyQueue.size());
+        System.out.println("Total jobs to run: " + jobsRemaining.get());
 
-        while (!readyQueue.isEmpty()) {
-            UUID jobId = readyQueue.poll();
-            Job job = jobMap.get(jobId);
-            jobRunner.runJob(job);
-            List<UUID> dependents = adjacencyList.getOrDefault(jobId, new ArrayList<>());
-            for(UUID dependentId : dependents) {
-                inDegree.put(dependentId, inDegree.get(dependentId) - 1);
-                if(inDegree.get(dependentId) == 0) {
-                    readyQueue.add(dependentId);
+        while (jobsRemaining.get() > 0) {
+            UUID jobId = readyQueue.poll(10, TimeUnit.SECONDS);
+            if (jobId == null) continue;
+
+            executor.submit(() -> {
+                Job job = jobMap.get(jobId); // use cached job for logic
+                try {
+                    jobService.updateStatus(jobId, JobStatus.RUNNING);
+                    System.out.println("Job " + job.getName() + " is RUNNING...");
+
+                    jobRunner.runJob(job);
+
+                    jobService.updateStatus(jobId, JobStatus.SUCCESS);
+                    System.out.println("Job " + job.getName() + " SUCCESS");
+
+                    List<UUID> dependents = adjacencyList.getOrDefault(jobId, new ArrayList<>());
+                    for (UUID dependantJobId : dependents) {
+                        int newVal = inDegree.compute(dependantJobId, (k, v) -> v - 1);
+                        if (newVal == 0) {
+                            readyQueue.add(dependantJobId);
+                        }
+                    }
+                    jobsRemaining.decrementAndGet();
+                } catch (Exception e) {
+                    jobService.updateStatus(jobId, JobStatus.FAILED);
+                    System.out.println("Job " + job.getName() + " FAILED: " + e.getMessage());
                 }
-            }
+            });
         }
+
+        executor.shutdown(); //Tells the executor to stop accepting new tasks. Continue running already submitted tasks until they finish.
+        executor.awaitTermination(1, TimeUnit.HOURS); // Waits until either all tasks finish (after shutdown()), OR Timeout expires (1 hour in this case).
     }
 }

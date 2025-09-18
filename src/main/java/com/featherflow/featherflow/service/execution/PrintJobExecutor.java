@@ -13,6 +13,5 @@ public class PrintJobExecutor implements  JobExecutor{
             Thread.currentThread().interrupt();
             throw new RuntimeException("Job execution interrupted", e);
         }
-        System.out.println("Finished job: " + job.getName());
     }
 }
