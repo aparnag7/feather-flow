@@ -7,8 +7,6 @@ import com.featherflow.featherflow.repository.JobDependencyRepository;
 import com.featherflow.featherflow.repository.JobRepository;
 import com.featherflow.featherflow.service.JobService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -29,13 +27,12 @@ public class WorkflowRunner {
         this.jobService = jobService;
     }
 
-    @Transactional(propagation = Propagation.NEVER)
     public void runWorkflow(UUID workflowId) throws InterruptedException {
         // get all jobs and dependencies for the workflow
         List<Job> jobs = jobRepository.findByWorkflowId(workflowId);
         HashMap<UUID, Job> jobMap = new HashMap<>();
         HashMap<UUID, List<UUID>> adjacencyList = new HashMap<>();
-        HashMap<UUID, Integer> inDegree = new HashMap<>();
+        ConcurrentHashMap<UUID, Integer> inDegree = new ConcurrentHashMap<>();
         for (Job job : jobs) {
             jobMap.put(job.getId(), job);
             List<JobDependency> dependencyList = dependencyRepository.findByJob(job);
@@ -85,11 +82,22 @@ public class WorkflowRunner {
                 } catch (Exception e) {
                     jobService.updateStatus(jobId, JobStatus.FAILED);
                     System.out.println("Job " + job.getName() + " FAILED: " + e.getMessage());
+                    skipDependents(jobId, adjacencyList);
                 }
             });
         }
 
         executor.shutdown(); //Tells the executor to stop accepting new tasks. Continue running already submitted tasks until they finish.
         executor.awaitTermination(1, TimeUnit.HOURS); // Waits until either all tasks finish (after shutdown()), OR Timeout expires (1 hour in this case).
+    }
+
+    private void skipDependents(UUID jobId, HashMap<UUID, List<UUID>> adjacencyList) {
+        List<UUID> dependents = adjacencyList.getOrDefault(jobId, new ArrayList<>());
+        for (UUID dependantJobId : dependents) {
+            jobService.updateStatus(dependantJobId, JobStatus.SKIPPED);
+            System.out.println("Job " + dependantJobId + " SKIPPED due to dependency failure.");
+            // recursively skip their dependents
+            skipDependents(dependantJobId, adjacencyList);
+        }
     }
 }
