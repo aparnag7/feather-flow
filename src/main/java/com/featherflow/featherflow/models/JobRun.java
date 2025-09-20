@@ -24,12 +24,23 @@ public class JobRun {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column
+    private String status;
+
     @ManyToOne
     @JoinColumn(name = "workflow_run_id", nullable = false)
     private WorkflowRun workflowRun;
 
+    @ManyToOne
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
+
+    private LocalDateTime startedAt;
+    private LocalDateTime endedAt;
+
     @PrePersist
     protected void onCreate() {
+        this.status = String.valueOf(JobStatus.RUNNING);
         this.createdAt = LocalDateTime.now();
     }
 
