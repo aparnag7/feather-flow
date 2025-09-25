@@ -20,7 +20,7 @@ public class FeatherflowApplication implements CommandLineRunner {
 	}
 
     public void run(String... args) throws InterruptedException {
-        String yamlPath = "assets/user_onboarding_workflow.yaml";
+        String yamlPath = "assets/ecommerce_order_fulfillment_workflow.yaml";
         orchestrator.runWorkflowFromYaml(yamlPath);
     }
 }

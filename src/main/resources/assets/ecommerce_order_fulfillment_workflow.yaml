@@ -1,0 +1,81 @@
+name: "ecommerce_order_fulfillment_workflow"
+jobs:
+  - name: "initiateOrder"
+    endpoint: "/api/orders/initiate"
+    serviceName: "OrderService"
+    dependsOn: []
+
+  - name: "validateInventory"
+    endpoint: "/api/inventory/check"
+    serviceName: "InventoryService"
+    dependsOn: ["initiateOrder"]
+
+  - name: "reserveStock"
+    endpoint: "/api/inventory/reserve"
+    serviceName: "InventoryService"
+    dependsOn: ["validateInventory"]
+
+  - name: "calculateDiscounts"
+    endpoint: "/api/payments/discounts"
+    serviceName: "PaymentService"
+    dependsOn: ["initiateOrder"]
+
+  - name: "calculateShipping"
+    endpoint: "/api/shipping/calculate"
+    serviceName: "ShippingService"
+    dependsOn: ["initiateOrder"]
+
+  - name: "processPayment"
+    endpoint: "/api/payments/charge"
+    serviceName: "PaymentService"
+    dependsOn: ["reserveStock", "calculateDiscounts", "calculateShipping"]
+
+  - name: "sendOrderConfirmation"
+    endpoint: "/api/notifications/email"
+    serviceName: "NotificationService"
+    dependsOn: ["processPayment"]
+
+  - name: "fraudCheck"
+    endpoint: "/api/risk/fraud-check"
+    serviceName: "RiskService"
+    dependsOn: ["processPayment"]
+
+  - name: "initiateShipment"
+    endpoint: "/api/shipping/initiate"
+    serviceName: "ShippingService"
+    dependsOn: ["processPayment", "fraudCheck"]
+
+  - name: "updateOrderStatus"
+    endpoint: "/api/orders/update-status"
+    serviceName: "OrderService"
+    dependsOn: ["initiateShipment"]
+
+  - name: "sendTrackingSMS"
+    endpoint: "/api/notifications/sms"
+    serviceName: "NotificationService"
+    dependsOn: ["initiateShipment"]
+
+  - name: "generateInvoice"
+    endpoint: "/api/invoices/generate"
+    serviceName: "InvoiceService"
+    dependsOn: ["processPayment"]
+
+  - name: "archiveOrderData"
+    endpoint: "/api/storage/archive"
+    serviceName: "DataService"
+    dependsOn: ["updateOrderStatus", "generateInvoice"]
+
+  - name: "sendFeedbackRequest"
+    endpoint: "/api/notifications/email"
+    serviceName: "NotificationService"
+    dependsOn: ["updateOrderStatus"]
+
+  - name: "updateAnalytics"
+    endpoint: "/api/analytics/update"
+    serviceName: "AnalyticsService"
+    dependsOn: ["generateInvoice", "archiveOrderData"]
+
+  - name: "pushToCRM"
+    endpoint: "/api/crm/push"
+    serviceName: "CRMService"
+    dependsOn: ["updateOrderStatus", "sendFeedbackRequest"]

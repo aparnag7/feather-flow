@@ -5,6 +5,7 @@ import com.featherflow.featherflow.repository.JobDependencyRepository;
 import com.featherflow.featherflow.repository.JobRepository;
 import com.featherflow.featherflow.repository.WorkflowRepository;
 import jakarta.transaction.Transactional;
+import com.featherflow.featherflow.aop.LogExecution;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -25,6 +26,7 @@ public class WorkflowService {
     // read about Transactional here: https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#transaction-declarative-annotations
 
     @Transactional
+    @LogExecution
     public Workflow saveWorkflow(WorkflowDefinition workflowDefinition) {
 
         // Step 1: Create Workflow entity
