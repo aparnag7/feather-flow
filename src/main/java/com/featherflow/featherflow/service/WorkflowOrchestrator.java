@@ -6,6 +6,7 @@ import com.featherflow.featherflow.parser.DAGValidator;
 import com.featherflow.featherflow.parser.YamlParser;
 import com.featherflow.featherflow.service.orchestrator.WorkflowRunner;
 import org.springframework.stereotype.Component;
+import com.featherflow.featherflow.aop.LogExecution;
 
 @Component
 public class WorkflowOrchestrator {
@@ -17,6 +18,7 @@ public class WorkflowOrchestrator {
         this.workflowRunner = workflowRunner;
     }
 
+    @LogExecution
     public void runWorkflowFromYaml(String yamlFilePath) throws InterruptedException {
         // 1. Parse YAML
         WorkflowDefinition workflowDefinition = new YamlParser().parseWorkflow(yamlFilePath);
